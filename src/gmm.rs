@@ -30,14 +30,40 @@ pub struct Threshold {
 const REG_COVAR: f64 = 1e-6;
 const TOL: f64 = 1e-3;
 
-/// Fit the two-component mixture. `x` must have at least two distinct values.
-pub fn fit(x: &[f64], max_iter: usize) -> Fit {
+/// Fit the two-component mixture from `n_init` starts and keep the best log-likelihood.
+///
+/// One start from the 10th/90th percentiles can settle in a worse optimum than sklearn's
+/// k-means start on a weakly bimodal marker (CXCR5 on the Lyme panel: means 0.0/0.9 against
+/// sklearn's -0.05/1.20, threshold 0.39 against 0.58). Further starts split at seeded random
+/// quantile pairs; the maximum-likelihood fit is what sklearn's own `n_init` would keep.
+pub fn fit(x: &[f64], max_iter: usize, n_init: usize, seed: u64) -> Fit {
+    use rand::{Rng, SeedableRng};
+    let mut best = fit_from(x, max_iter, None);
+    if n_init <= 1 {
+        return best;
+    }
+    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed ^ 0x6d6d_5f69_6e69_7473);
+    for _ in 1..n_init {
+        let lo: f64 = rng.gen_range(0.02..0.45);
+        let hi: f64 = rng.gen_range(0.55..0.98);
+        let f = fit_from(x, max_iter, Some((lo, hi)));
+        if f.log_likelihood > best.log_likelihood {
+            best = f;
+        }
+    }
+    best
+}
+
+/// One EM run from a k-means start at the given quantile pair (default 10th/90th).
+/// `x` must have at least two distinct values.
+pub fn fit_from(x: &[f64], max_iter: usize, start: Option<(f64, f64)>) -> Fit {
     let n = x.len().max(1) as f64;
     // k-means init from the 10th and 90th percentiles, then Lloyd iterations.
     let mut sorted = x.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let q = |p: f64| sorted[((sorted.len() - 1) as f64 * p).round() as usize];
-    let mut c = [q(0.1), q(0.9)];
+    let (lo, hi) = start.unwrap_or((0.1, 0.9));
+    let mut c = [q(lo), q(hi)];
     if c[0] == c[1] {
         c = [sorted[0], sorted[sorted.len() - 1]];
     }
@@ -176,7 +202,7 @@ mod tests {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(1);
         let mut x = draw(&mut rng, 0.2, 0.3, 30_000);
         x.extend(draw(&mut rng, 2.5, 0.5, 10_000));
-        let f = fit(&x, 100);
+        let f = fit(&x, 100, 5, 1);
         assert!((f.mean[0] - 0.2).abs() < 0.03, "{f:?}");
         assert!((f.mean[1] - 2.5).abs() < 0.05, "{f:?}");
         assert!(
@@ -193,7 +219,7 @@ mod tests {
     fn unimodal_data_uses_the_tail_rule() {
         let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(2);
         let x = draw(&mut rng, 0.5, 0.2, 20_000);
-        let f = fit(&x, 100);
+        let f = fit(&x, 100, 5, 1);
         let t = threshold(f, 0.5, 2.0);
         assert!(!t.bimodal, "{t:?}");
         // both components sit inside one hump; the threshold is the lower mean + 2 sd
@@ -211,7 +237,44 @@ mod tests {
                 }
             })
             .collect();
-        let f = fit(&x, 50);
+        let f = fit(&x, 50, 3, 1);
         assert!(f.mean[0] < f.mean[1]);
+    }
+}
+
+#[cfg(test)]
+mod restart_tests {
+    use super::*;
+    use rand::SeedableRng;
+    use rand_distr::{Distribution, Normal};
+
+    /// A weakly bimodal marker with a heavy negative shoulder: the percentile start can stop in
+    /// a worse optimum; more starts must never return a lower likelihood than one.
+    #[test]
+    fn more_starts_never_lose_likelihood() {
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(7);
+        let mut x: Vec<f64> = Normal::new(0.0, 0.35)
+            .unwrap()
+            .sample_iter(&mut rng)
+            .take(40_000)
+            .collect();
+        x.extend(
+            Normal::new(0.6, 0.5)
+                .unwrap()
+                .sample_iter(&mut rng)
+                .take(12_000),
+        );
+        x.extend(
+            Normal::new(1.4, 0.4)
+                .unwrap()
+                .sample_iter(&mut rng)
+                .take(8_000),
+        );
+        let one = fit(&x, 100, 1, 1);
+        let ten = fit(&x, 100, 10, 1);
+        assert!(
+            ten.log_likelihood >= one.log_likelihood - 1e-12,
+            "{one:?} vs {ten:?}"
+        );
     }
 }

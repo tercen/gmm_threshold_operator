@@ -135,7 +135,7 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
     for r in 0..p {
         let col = &data[r * n_cells..(r + 1) * n_cells];
         let x: Vec<f64> = sub.iter().map(|&i| col[i] as f64).collect();
-        let f = gmm::fit(&x, s.max_iter);
+        let f = gmm::fit(&x, s.max_iter, s.n_init, s.seed);
         let th = gmm::threshold(f, s.min_separation, s.tail_sd);
         let positive = col.iter().filter(|v| (**v as f64) > th.threshold).count();
         threshold.push(th.threshold);

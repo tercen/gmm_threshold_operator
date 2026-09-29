@@ -20,6 +20,8 @@ pub struct Settings {
     pub tail_sd: f64,
     /// EM iterations at most.
     pub max_iter: usize,
+    /// EM starts per marker; the best log-likelihood wins (sklearn's `n_init`).
+    pub n_init: usize,
 }
 
 impl Default for Settings {
@@ -30,6 +32,7 @@ impl Default for Settings {
             min_separation: 0.5,
             tail_sd: 2.0,
             max_iter: 100,
+            n_init: 10,
         }
     }
 }
@@ -49,6 +52,7 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
         min_separation: num("min_separation", d.min_separation)?,
         tail_sd: num("tail_sd", d.tail_sd)?,
         max_iter: num("max_iter", d.max_iter as f64)?.max(1.0) as usize,
+        n_init: num("n_init", d.n_init as f64)?.max(1.0) as usize,
     };
     Ok(s)
 }

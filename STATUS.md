@@ -4,3 +4,5 @@
 table). Gathers the whole crosstab (4 bytes a value), so cohort scale needs the same spill the
 other gathering operators need; at 5,000 events per file on the 93-file panel that is 8 M values.
 Written for the run-9-on-Tercen workflow (jamie/spectral-pipeline-comparisons, PLAN.md M3).
+
+0.1.1 (2026-09-29): `n_init` restarts (default 10) at seeded quantile pairs, best log-likelihood kept. One percentile start put CXCR5 at 0.39 where sklearn (any n_init) gives 0.58; the restarts recover sklearn's optimum. Platform test regenerated? No: the three synthetic markers give the same fit from every start, fixtures unchanged.
