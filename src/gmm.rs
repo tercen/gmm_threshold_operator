@@ -28,14 +28,17 @@ pub struct Threshold {
 }
 
 const REG_COVAR: f64 = 1e-6;
-const TOL: f64 = 1e-3;
+// sklearn's tol (1e-3) is on the lower bound per sample too, but the EM here compared successive
+// **mean** log-likelihoods and stopped after ~6 iterations on a weakly bimodal marker (CXCR5:
+// ll -0.5122, means -0.06/0.84) where the optimum (ll -0.5100, means -0.05/1.18) needs ~30. A
+// tolerance three orders tighter reaches it from every start tried; the cost is milliseconds.
+const TOL: f64 = 1e-6;
 
 /// Fit the two-component mixture from `n_init` starts and keep the best log-likelihood.
 ///
-/// One start from the 10th/90th percentiles can settle in a worse optimum than sklearn's
-/// k-means start on a weakly bimodal marker (CXCR5 on the Lyme panel: means 0.0/0.9 against
-/// sklearn's -0.05/1.20, threshold 0.39 against 0.58). Further starts split at seeded random
-/// quantile pairs; the maximum-likelihood fit is what sklearn's own `n_init` would keep.
+/// The starts split at seeded random quantile pairs after the percentile default. On the Lyme
+/// panel every start reaches the same optimum once the EM tolerance is tight (see `TOL`); the
+/// restarts remain as insurance on other data, at the cost of `n_init` EM runs per marker.
 pub fn fit(x: &[f64], max_iter: usize, n_init: usize, seed: u64) -> Fit {
     use rand::{Rng, SeedableRng};
     let mut best = fit_from(x, max_iter, None);

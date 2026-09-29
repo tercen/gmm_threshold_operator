@@ -31,7 +31,7 @@ impl Default for Settings {
             seed: 5024,
             min_separation: 0.5,
             tail_sd: 2.0,
-            max_iter: 100,
+            max_iter: 500,
             n_init: 10,
         }
     }

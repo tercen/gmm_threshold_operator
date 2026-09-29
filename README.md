@@ -22,8 +22,8 @@ threshold is `mean_low + tail_sd × sd_low`.
 | `seed` | 5024 | Seed of that draw. |
 | `min_separation` | 0.5 | Means at least this far apart: bimodal. |
 | `tail_sd` | 2.0 | Unimodal threshold: `mean_low + tail_sd × sd_low`. |
-| `max_iter` | 100 | EM iterations at most. |
-| `n_init` | 10 | EM starts per marker, best log-likelihood kept (sklearn's `n_init`). One start settled in a worse optimum on CXCR5 (threshold 0.39 vs sklearn's 0.58). |
+| `max_iter` | 500 | EM iterations at most. |
+| `n_init` | 10 | EM starts per marker, best log-likelihood kept (sklearn's `n_init`). Insurance: on the Lyme panel every start reaches the same optimum once the EM tolerance is tight (1e-6, since 0.1.2). |
 
 ## Parity
 
