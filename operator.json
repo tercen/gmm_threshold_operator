@@ -14,7 +14,7 @@
     "https://github.com/tercen/gmm_threshold_rust_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/gmm_threshold_rust_operator:0.1.2",
+  "container": "ghcr.io/tercen/gmm_threshold_rust_operator:0.1.3",
   "operatorSpec": {
     "kind": "OperatorSpec",
     "ontologyUri": "https://tercen.com/_ontology/tercen",
@@ -172,14 +172,14 @@
     {
       "kind": "DoubleProperty",
       "name": "max_iter",
-      "defaultValue": 500,
+      "defaultValue": 100,
       "description": "EM iterations at most."
     },
     {
       "kind": "DoubleProperty",
       "name": "n_init",
-      "defaultValue": 10,
-      "description": "EM starts per marker; the fit with the best log-likelihood is kept (sklearn's n_init). 1 reproduces 0.1.0."
+      "defaultValue": 1,
+      "description": "Extra EM starts at seeded quantile pairs, best log-likelihood kept. 1 (default) is sklearn's behaviour and the reference's."
     }
   ]
 }

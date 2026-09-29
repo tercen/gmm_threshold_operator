@@ -28,11 +28,13 @@ pub struct Threshold {
 }
 
 const REG_COVAR: f64 = 1e-6;
-// sklearn's tol (1e-3) is on the lower bound per sample too, but the EM here compared successive
-// **mean** log-likelihoods and stopped after ~6 iterations on a weakly bimodal marker (CXCR5:
-// ll -0.5122, means -0.06/0.84) where the optimum (ll -0.5100, means -0.05/1.18) needs ~30. A
-// tolerance three orders tighter reaches it from every start tried; the cost is milliseconds.
-const TOL: f64 = 1e-6;
+// sklearn's rule: stop when the per-sample lower bound moves by less than 1e-3. This is
+// deliberately NOT tightened. The reference pipeline's thresholds are what sklearn's
+// `GaussianMixture(2, n_init=1)` produced under this rule, and on a weakly bimodal marker the
+// early stop is part of the answer: converged to 1e-6, IgM's threshold moves from 1.06 to 1.81 and
+// NKP44 flips from unimodal to bimodal, neither of which the reference did. What did matter was
+// the start (see `fit_from`).
+const TOL: f64 = 1e-3;
 
 /// Fit the two-component mixture from `n_init` starts and keep the best log-likelihood.
 ///
@@ -61,12 +63,21 @@ pub fn fit(x: &[f64], max_iter: usize, n_init: usize, seed: u64) -> Fit {
 /// `x` must have at least two distinct values.
 pub fn fit_from(x: &[f64], max_iter: usize, start: Option<(f64, f64)>) -> Fit {
     let n = x.len().max(1) as f64;
-    // k-means init from the 10th and 90th percentiles, then Lloyd iterations.
+    // Start from the 2-means partition. sklearn seeds EM from k-means (k-means++ then Lloyd),
+    // which in one dimension with two centres finds the global 2-means optimum; a start from
+    // the 10th/90th percentiles followed by Lloyd did not always (CXCR5: threshold 0.40 against
+    // sklearn's 0.58 from a different basin). In 1-D the global optimum is exact: sort, and scan
+    // the split that minimises the within-cluster sum of squares. `start = Some((lo, hi))`
+    // keeps the quantile start for the restarts.
     let mut sorted = x.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    let q = |p: f64| sorted[((sorted.len() - 1) as f64 * p).round() as usize];
-    let (lo, hi) = start.unwrap_or((0.1, 0.9));
-    let mut c = [q(lo), q(hi)];
+    let mut c = match start {
+        Some((lo, hi)) => {
+            let q = |p: f64| sorted[((sorted.len() - 1) as f64 * p).round() as usize];
+            [q(lo), q(hi)]
+        }
+        None => two_means_split(&sorted),
+    };
     if c[0] == c[1] {
         c = [sorted[0], sorted[sorted.len() - 1]];
     }
@@ -170,6 +181,33 @@ pub fn fit_from(x: &[f64], max_iter: usize, start: Option<(f64, f64)>) -> Fit {
         out.weight.swap(0, 1);
     }
     out
+}
+
+/// Centres of the two-cluster k-means partition of sorted data, found exactly: the split point
+/// minimising the total within-cluster sum of squares.
+pub fn two_means_split(sorted: &[f64]) -> [f64; 2] {
+    let n = sorted.len();
+    if n < 2 {
+        return [sorted.first().copied().unwrap_or(0.0); 2];
+    }
+    let (mut s1, mut s2) = (0.0f64, 0.0f64);
+    let total1: f64 = sorted.iter().sum();
+    let total2: f64 = sorted.iter().map(|v| v * v).sum();
+    let mut best = (f64::INFINITY, 1usize);
+    for k in 1..n {
+        let v = sorted[k - 1];
+        s1 += v;
+        s2 += v * v;
+        let (kf, rf) = (k as f64, (n - k) as f64);
+        let sse = (s2 - s1 * s1 / kf) + ((total2 - s2) - (total1 - s1) * (total1 - s1) / rf);
+        if sse < best.0 {
+            best = (sse, k);
+        }
+    }
+    let k = best.1;
+    let left: f64 = sorted[..k].iter().sum::<f64>() / k as f64;
+    let right: f64 = sorted[k..].iter().sum::<f64>() / (n - k) as f64;
+    [left, right]
 }
 
 /// The threshold rule.
@@ -278,6 +316,21 @@ mod restart_tests {
         assert!(
             ten.log_likelihood >= one.log_likelihood - 1e-12,
             "{one:?} vs {ten:?}"
+        );
+    }
+}
+
+#[cfg(test)]
+mod split_tests {
+    use super::*;
+    #[test]
+    fn two_means_split_finds_the_gap() {
+        let mut v: Vec<f64> = (0..100).map(|i| i as f64 * 0.01).collect();
+        v.extend((0..50).map(|i| 5.0 + i as f64 * 0.01));
+        let c = two_means_split(&v);
+        assert!(
+            (c[0] - 0.495).abs() < 1e-9 && (c[1] - 5.245).abs() < 1e-9,
+            "{c:?}"
         );
     }
 }

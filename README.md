@@ -22,15 +22,16 @@ threshold is `mean_low + tail_sd × sd_low`.
 | `seed` | 5024 | Seed of that draw. |
 | `min_separation` | 0.5 | Means at least this far apart: bimodal. |
 | `tail_sd` | 2.0 | Unimodal threshold: `mean_low + tail_sd × sd_low`. |
-| `max_iter` | 500 | EM iterations at most. |
-| `n_init` | 10 | EM starts per marker, best log-likelihood kept (sklearn's `n_init`). Insurance: on the Lyme panel every start reaches the same optimum once the EM tolerance is tight (1e-6, since 0.1.2). |
+| `max_iter` | 100 | EM iterations at most. |
+| `n_init` | 1 | EM starts per marker, best log-likelihood kept (sklearn's `n_init`). Extra starts at seeded quantile pairs. Not needed for parity: the default start is the exact 1-D 2-means split, which is what sklearn's k-means seed reaches. |
 
 ## Parity
 
-The mixture is fitted by EM from a k-means start, to a log-likelihood tolerance of 1e-3 with a
-variance floor of 1e-6 — sklearn's `GaussianMixture(2, n_init=1)` defaults. The starts differ
-(sklearn's k-means is randomised), so fitted parameters agree to what the rule needs, not bit for
-bit. `cargo test` checks a clear bimodal mixture, a unimodal one, and the component ordering.
+The mixture is fitted by EM from the exact 1-D 2-means split (what sklearn's k-means seed reaches), to
+a per-sample log-likelihood tolerance of 1e-3 with a variance floor of 1e-6 — sklearn's
+`GaussianMixture(2, n_init=1)` rule, early stop included: converging further changes the answer on
+weakly bimodal markers and the reference did not. On the 23 state markers of the Lyme panel the
+thresholds match the reference to a median of 0.004 with every mode agreeing. `cargo test` checks a clear bimodal mixture, a unimodal one, and the component ordering.
 
 Feed the thresholds back as a row factor to a fraction-above step to get percent positive per
 group; see `fraction_above_rust_operator`.
