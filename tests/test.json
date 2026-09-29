@@ -1,0 +1,35 @@
+{
+  "kind": "OperatorUnitTest",
+  "name": "gmm_threshold_three_markers",
+  "namespace": "ds0",
+  "inputDataUri": "gmm_test_long.csv",
+  "outputDataUri": [
+    "table1.csv",
+    "table2.csv"
+  ],
+  "columns": [
+    "cell_id"
+  ],
+  "rows": [
+    "marker"
+  ],
+  "colors": [],
+  "labels": [],
+  "yAxis": "value",
+  "xAxis": "",
+  "generatedOn": "09/29/2026 02:10:00 PM 2026",
+  "version": "",
+  "absTol": 1e-06,
+  "propertyValues": [
+    {
+      "kind": "PropertyValue",
+      "name": "subsample",
+      "value": "0"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "seed",
+      "value": "5024"
+    }
+  ]
+}
