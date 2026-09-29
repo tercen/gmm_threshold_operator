@@ -1,0 +1,179 @@
+{
+  "name": "GMM threshold (Rust)",
+  "description": "One positivity threshold per marker from a two-component Gaussian mixture on a seeded subsample: the midpoint of the two means when they are at least min_separation apart, else mean_low + tail_sd * sd_low. The rule of the CYTOSHRINK state analysis.",
+  "tags": [
+    "cytometry",
+    "threshold",
+    "gmm",
+    "state markers"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/gmm_threshold_rust_operator"
+  ],
+  "communicationProtocol": "grpc",
+  "container": "ghcr.io/tercen/gmm_threshold_rust_operator:0.1.0",
+  "operatorSpec": {
+    "kind": "OperatorSpec",
+    "ontologyUri": "https://tercen.com/_ontology/tercen",
+    "ontologyVersion": "0.0.1",
+    "inputSpecs": [
+      {
+        "kind": "CrosstabSpec",
+        "metaFactors": [
+          {
+            "kind": "MetaFactor",
+            "name": "Variable",
+            "type": "",
+            "description": "Marker (or channel) name: one threshold is fitted per row.",
+            "ontologyMapping": "variable",
+            "crosstabMapping": "row",
+            "cardinality": "0..n",
+            "factors": []
+          },
+          {
+            "kind": "MetaFactor",
+            "name": "Observation",
+            "type": "",
+            "description": "Cell, event or observation identifier.",
+            "ontologyMapping": "observation",
+            "crosstabMapping": "column",
+            "cardinality": "0..n",
+            "factors": []
+          }
+        ],
+        "axis": [
+          {
+            "kind": "AxisSpec",
+            "metaFactors": [
+              {
+                "kind": "MetaFactor",
+                "name": "Measurement",
+                "type": "double",
+                "description": "Transformed expression values (asinh, normalised) the mixture is fitted to.",
+                "ontologyMapping": "measurement",
+                "crosstabMapping": "y",
+                "cardinality": "1",
+                "factors": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputSpecsV2": [
+      {
+        "kind": "OperatorJoinSpec",
+        "joinOperators": [
+          {
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [
+                "Variable"
+              ],
+              "rColumns": [
+                "Variable"
+              ]
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "threshold",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "mode",
+                  "type": "string"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "separation",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "mean_low",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "sd_low",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "mean_high",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "sd_high",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "weight_low",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "pct_positive",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "cells_fitted",
+                  "type": "int32"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "em_iterations",
+                  "type": "int32"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "kind": "DoubleProperty",
+      "name": "subsample",
+      "defaultValue": 500000,
+      "description": "Cells drawn (seeded, without replacement) to fit each marker's mixture; 0 fits on every cell."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "seed",
+      "defaultValue": 5024,
+      "description": "Seed of the subsample."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "min_separation",
+      "defaultValue": 0.5,
+      "description": "Two means at least this far apart make the marker bimodal and the threshold their midpoint."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "tail_sd",
+      "defaultValue": 2.0,
+      "description": "Unimodal threshold: mean of the lower component plus this many of its standard deviations."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "max_iter",
+      "defaultValue": 100,
+      "description": "EM iterations at most."
+    }
+  ]
+}
