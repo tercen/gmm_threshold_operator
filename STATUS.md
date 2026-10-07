@@ -1,4 +1,4 @@
-# gmm_threshold_rust_operator — status, 2026-09-29
+# gmm_threshold_operator — status, 2026-09-29
 
 0.1.0: built from the flowsom_rust_operator skeleton (gather the crosstab, fit, one `.ri`-keyed
 table). Gathers the whole crosstab (4 bytes a value), so cohort scale needs the same spill the

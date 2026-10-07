@@ -1,4 +1,4 @@
-# gmm_threshold_rust_operator
+# gmm_threshold_operator
 
 One positivity threshold per marker, from a two-component Gaussian mixture. The rule is the
 CYTOSHRINK state analysis's (`state_analysis.py`, section 14): fit the mixture to a seeded
@@ -12,7 +12,7 @@ threshold is `mean_low + tail_sd × sd_low`.
 | columns | cells |
 | y | the transformed value (asinh, normalised) |
 | output | one row per marker, joined on the row: `threshold`, `mode`, `separation`, `mean_low`, `sd_low`, `mean_high`, `sd_high`, `weight_low`, `pct_positive` (over all cells), `cells_fitted`, `em_iterations` |
-| image | `ghcr.io/tercen/gmm_threshold_rust_operator` |
+| image | `ghcr.io/tercen/gmm_threshold_operator` |
 
 ## Properties
 

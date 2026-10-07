@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: tercen/gmm_threshold_rust_operator
+  IMAGE_NAME: tercen/gmm_threshold_operator
 
 jobs:
   build-and-push-image:

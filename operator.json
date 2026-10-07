@@ -1,5 +1,5 @@
 {
-  "name": "GMM threshold (Rust)",
+  "name": "GMM threshold",
   "description": "One positivity threshold per marker from a two-component Gaussian mixture on a seeded subsample: the midpoint of the two means when they are at least min_separation apart, else mean_low + tail_sd * sd_low. The rule of the CYTOSHRINK state analysis.",
   "tags": [
     "cytometry",
@@ -11,10 +11,10 @@
     "tercen"
   ],
   "urls": [
-    "https://github.com/tercen/gmm_threshold_rust_operator"
+    "https://github.com/tercen/gmm_threshold_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/gmm_threshold_rust_operator:0.1.5",
+  "container": "ghcr.io/tercen/gmm_threshold_operator:0.1.6",
   "operatorSpec": {
     "kind": "OperatorSpec",
     "ontologyUri": "https://tercen.com/_ontology/tercen",

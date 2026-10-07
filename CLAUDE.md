@@ -1,4 +1,4 @@
-# gmm_threshold_rust_operator
+# gmm_threshold_operator
 
 Rust Tercen operator; skeleton copied from `flowsom_rust_operator` (context, input streaming,
 TSON writer, upload, progress, pagecache). Operator logic: `src/gmm.rs` (EM + threshold rule),
