@@ -3,7 +3,7 @@ name = "gmm_threshold_operator"
 version = "0.1.5"
 edition = "2024"
 description = "Per-marker positivity threshold from a two-component Gaussian mixture (Tercen operator, Rust)"
-license = "MIT"
+license = "GPL-2.0-or-later"
 
 [lib]
 name = "gmm_threshold_operator"
