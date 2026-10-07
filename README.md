@@ -30,8 +30,8 @@ threshold is `mean_low + tail_sd × sd_low`.
 The mixture is fitted by EM from the exact 1-D 2-means split (what sklearn's k-means seed reaches), to
 a per-sample log-likelihood tolerance of 1e-3 with a variance floor of 1e-6 — sklearn's
 `GaussianMixture(2, n_init=1)` rule, early stop included: converging further changes the answer on
-weakly bimodal markers and the reference did not. On the 23 state markers of the Lyme panel the
-thresholds match the reference to a median of 0.004 with every mode agreeing. `cargo test` checks a clear bimodal mixture, a unimodal one, and the component ordering.
+weakly bimodal markers and the reference did not. On a 23-marker spectral panel the
+thresholds match the sklearn reference closely with every mode agreeing. `cargo test` checks a clear bimodal mixture, a unimodal one, and the component ordering.
 
 Feed the thresholds back as a row factor to a fraction-above step to get percent positive per
 group; see `fraction_above_rust_operator`.

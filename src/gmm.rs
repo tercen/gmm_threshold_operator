@@ -31,15 +31,15 @@ const REG_COVAR: f64 = 1e-6;
 // sklearn's rule: stop when the per-sample lower bound moves by less than 1e-3. This is
 // deliberately NOT tightened. The reference pipeline's thresholds are what sklearn's
 // `GaussianMixture(2, n_init=1)` produced under this rule, and on a weakly bimodal marker the
-// early stop is part of the answer: converged to 1e-6, IgM's threshold moves from 1.06 to 1.81 and
-// NKP44 flips from unimodal to bimodal, neither of which the reference did. What did matter was
+// early stop is part of the answer: converged to 1e-6, one marker's threshold moved substantially and
+// another flipped from unimodal to bimodal, neither of which the reference did. What did matter was
 // the start (see `fit_from`).
 const TOL: f64 = 1e-3;
 
 /// Fit the two-component mixture from `n_init` starts and keep the best log-likelihood.
 ///
-/// The starts split at seeded random quantile pairs after the percentile default. On the Lyme
-/// panel every start reaches the same optimum once the EM tolerance is tight (see `TOL`); the
+/// The starts split at seeded random quantile pairs after the percentile default. On the panel
+/// it was developed on, every start reaches the same optimum once the EM tolerance is tight (see `TOL`); the
 /// restarts remain as insurance on other data, at the cost of `n_init` EM runs per marker.
 pub fn fit(x: &[f64], max_iter: usize, n_init: usize, seed: u64) -> Fit {
     use rand::{Rng, SeedableRng};
@@ -65,8 +65,8 @@ pub fn fit_from(x: &[f64], max_iter: usize, start: Option<(f64, f64)>) -> Fit {
     let n = x.len().max(1) as f64;
     // Start from the 2-means partition. sklearn seeds EM from k-means (k-means++ then Lloyd),
     // which in one dimension with two centres finds the global 2-means optimum; a start from
-    // the 10th/90th percentiles followed by Lloyd did not always (CXCR5: threshold 0.40 against
-    // sklearn's 0.58 from a different basin). In 1-D the global optimum is exact: sort, and scan
+    // the 10th/90th percentiles followed by Lloyd did not always (one marker landed in a
+    // different basin from sklearn). In 1-D the global optimum is exact: sort, and scan
     // the split that minimises the within-cluster sum of squares. `start = Some((lo, hi))`
     // keeps the quantile start for the restarts.
     let mut sorted = x.to_vec();

@@ -1,6 +1,6 @@
 //! Operator properties.
 //!
-//! The rule is `state_analysis.py`'s (Jamie's pipeline, section 14): per marker, fit a
+//! The rule is `state_analysis.py`'s (the CYTOSHRINK pipeline, section 14): per marker, fit a
 //! two-component Gaussian mixture to a seeded subsample; if the two means are at least
 //! `min_separation` apart the marker is bimodal and the threshold is their midpoint, else it is
 //! unimodal and the threshold is the lower mean plus `tail_sd` standard deviations of the lower
